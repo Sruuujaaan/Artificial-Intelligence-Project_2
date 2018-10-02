@@ -74,7 +74,37 @@ class ReflexAgent(Agent):
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
 
         "*** YOUR CODE HERE ***"
-        return successorGameState.getScore()
+        pacToFoodDistances = []
+        pacToGhostDistances = []
+        foodPositionInMaze = newFood.asList()
+        deciderVar = 0       # Helps in Determining if this state can be visited by Pac.
+
+        # Calculate the distance from every foodPositionInMaze to current state in which pacman is and store it in the list.
+        for food in foodPositionInMaze:
+            pacToFoodDistances.append(manhattanDistance(newPos, food))
+
+        # Change deciderVar according to food( Closer the food to Pac. better the state)
+        for i in pacToFoodDistances:
+            if i < 5:
+                deciderVar += 1
+            elif i >= 5 and i <= 15:
+                deciderVar += 0.2
+            else:
+                deciderVar += 0.15
+
+        # Calculate the distance from every Ghost in maze to current state in which pacman is and store it in the list.
+        for ghost in successorGameState.getGhostPositions():
+            pacToGhostDistances.append(manhattanDistance(newPos, ghost))
+
+        # Change deciderVar according to ghost( Closer the ghost to Pac. Worse the state)
+        for ghost in successorGameState.getGhostPositions():
+            if ghost == newPos:     # Ghost is present on the next position
+                deciderVar = 2 - deciderVar
+
+            elif manhattanDistance(ghost, newPos) <= 3.5:
+                deciderVar = 1 - deciderVar
+
+        return successorGameState.getScore() + deciderVar
 
 def scoreEvaluationFunction(currentGameState):
     """
