@@ -159,7 +159,51 @@ class MinimaxAgent(MultiAgentSearchAgent):
             Returns the total number of agents in the game
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        
+        def miniMaxSearch(gameState, agentIndex, depth):
+            nextMove = list()
+
+            if not gameState.getLegalActions(agentIndex):   # If the state is illegal terminate it
+                return self.evaluationFunction(gameState), 0
+
+            if depth == self.depth:   # if reached max depth, evaluate state
+                return self.evaluationFunction(gameState), 0
+
+            if agentIndex == gameState.getNumAgents() - 1:   # start new max layer with bigger depth
+                depth += 1
+                nextAgent = self.index  # nextAgent = pacman
+
+            else:
+                nextAgent = agentIndex + 1  # Selecting nextAgent as a ghost
+
+            # For every successor find minimax value
+            for move in gameState.getLegalActions(agentIndex):
+
+                if not nextMove:
+                    nextValue = miniMaxSearch(gameState.generateSuccessor(agentIndex, move), nextAgent, depth)
+                    # Store minimax value and move in nextMove list
+                    nextMove.append(nextValue[0])
+                    nextMove.append(move)
+                else:
+                    # Check if miniMaxSearch value is better than the previous one
+                    previousValue = nextMove[0]  # Keep previous Minimax value.
+                    nextValue = miniMaxSearch(gameState.generateSuccessor(agentIndex, move), nextAgent, depth)
+
+                    # MaxAgent is Pacman
+                    if agentIndex == self.index:
+                        if nextValue[0] > previousValue:
+                            nextMove[0] = nextValue[0]
+                            nextMove[1] = move
+
+                    # MinAgent is Ghost
+                    else:
+                        if nextValue[0] < previousValue:
+                            nextMove[0] = nextValue[0]
+                            nextMove[1] = move
+            return nextMove
+
+        # Intiallly minMaxSearch is called with depth = 0 and Pacman always plays first self.index.
+        return miniMaxSearch(gameState, self.index, 0)[1]
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
