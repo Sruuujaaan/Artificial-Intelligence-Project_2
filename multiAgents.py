@@ -215,7 +215,67 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
           Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        def alphaBetaPruning(gameState, agentIndex, depth, x, y):
+            nextMove = list()
+
+            if not gameState.getLegalActions(agentIndex):  # If the state is illegal terminate it
+                return self.evaluationFunction(gameState), 0
+
+            if depth == self.depth:  # if reached max depth, evaluate state
+                return self.evaluationFunction(gameState), 0
+
+            if agentIndex == gameState.getNumAgents() - 1:  # start new max layer with bigger depth
+                depth += 1
+                # Make a move and make sure that the first move is made by Pacman
+                nextAgent = self.index  # nextAgent = pacman
+
+            else:
+                nextAgent = agentIndex + 1  # Selecting nextAgent as a ghost
+
+            # For every successor find minmax value
+            for move in gameState.getLegalActions(agentIndex):
+                if not nextMove:
+                    nextValue = alphaBetaPruning(gameState.generateSuccessor(agentIndex, move), nextAgent, depth, x, y)
+                    # Store minimax value and move in nextMove list
+                    nextMove.append(nextValue[0])
+                    nextMove.append(move)
+
+                    # Fixing x,y for the first node
+                    if agentIndex == self.index:
+                        x = max(nextMove[0], x)
+                    else:
+                        y = min(nextMove[0], y)
+                else:
+                    # Check if minMax value is better than the previous one so that some nodes can be ignored (Pruned)
+                    # There is no need to search next nodes as alphaBetaPruning Pruning is true
+                    if nextMove[0] > y and agentIndex == self.index:
+                        return nextMove
+
+                    if nextMove[0] < x and agentIndex != self.index:
+                        return nextMove
+
+                    previousValue = nextMove[0] # Keep previous value
+                    nextValue = alphaBetaPruning(gameState.generateSuccessor(agentIndex, move), nextAgent, depth, x, y)
+
+                    # MaxAgent is Pacman
+                    if agentIndex == self.index:
+                        if nextValue[0] > previousValue:
+                            nextMove[0] = nextValue[0]
+                            nextMove[1] = move
+                            x = max(nextMove[0], x)
+
+                    # MinAgent is Pacman
+                    else:
+                        if nextValue[0] < previousValue:
+                            nextMove[0] = nextValue[0]
+                            nextMove[1] = move
+                            y = min(nextMove[0], y)
+            return nextMove
+
+        # Call alphaBetaPruning with initial depth = 0 and x ,y values as some large number (as it is infinity infinity)
+        # return alphaBetaPruning(gameState,self.index,0, a big negative number, a big number)[1]
+        return alphaBetaPruning(gameState, self.index, 0, -100000000, 100000000)[1]
+
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
