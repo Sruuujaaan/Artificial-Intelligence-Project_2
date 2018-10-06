@@ -290,7 +290,41 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
           legal moves.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        def maxValue(gameState, depth):
+            legalActions = gameState.getLegalActions(0)
+            if len(legalActions) == 0 or gameState.isWin() or gameState.isLose() or depth == self.depth: # If reached Win or Lose steop or max depth, evaluate state
+                return self.evaluationFunction(gameState), None
+
+            move = None
+            weight = -(float(100000000))  # Choose number as big as possible (preferably infinity)
+
+            for action in legalActions:
+                successorValue = expectimaxValue(gameState.generateSuccessor(0, action), 1, depth)[0]
+                if weight < successorValue:
+                    weight, move = successorValue, action
+            return weight, move
+
+
+        #Here instead of using a min return I have used expectimax return (Computes Average of nodes)
+        def expectimaxValue(gameState, agentID, depth):
+            legalActions = gameState.getLegalActions(agentID)
+            if len(legalActions) == 0:
+                return self.evaluationFunction(gameState), None
+
+            weight = 0
+            move = None
+            for action in legalActions:
+                if agentID == gameState.getNumAgents() - 1:
+                    successorValue = maxValue(gameState.generateSuccessor(agentID, action), depth + 1)[0]
+                else:
+                    successorValue = expectimaxValue(gameState.generateSuccessor(agentID, action), agentID + 1, depth)[0]
+                probability = successorValue / len(legalActions)
+                weight += probability
+            return weight, move
+
+        # return the greatest minimax value
+        maxValue = maxValue(gameState, 0)[1]
+        return maxValue
 
 def betterEvaluationFunction(currentGameState):
     """
