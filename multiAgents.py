@@ -334,7 +334,63 @@ def betterEvaluationFunction(currentGameState):
       DESCRIPTION: <write something here so we know what you did>
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    newGhostStates = currentGameState.getGhostStates()
+    newPosPac = currentGameState.getPacmanPosition()
+    totalCapsules = len(currentGameState.getCapsules())  # Capsules left
+    totalFood = len(currentGameState.getFood().asList())  # Food left
+    killerGhosts = list()  # These ghosts can kill the pacman
+    scaredGhosts = list()  # Pacman can eat these ghosts
+    evalScore = 0  # Initialize evaluation value
+
+    # Make a list of KillerGhosts and ScaredGhosts (scaredTimer tells us if the ghost is scared or not)
+    for ghost in newGhostStates:
+        if ghost.scaredTimer:
+            scaredGhosts.append(ghost)
+        else:
+            killerGhosts.append(ghost)
+
+    evalScore += 1.5 * currentGameState.getScore()         # It tells us some info about the current state(set it to 1.5)
+    evalScore += -10 * totalFood                           # Give 10 points to pacman if he eats food
+    evalScore += -20 * totalCapsules                       # Give 20 points to pacman if he eats capsule
+
+    distanceFromFood = list()
+    distanceFromKillerGhosts = list()
+    distanceFromScaredGhosts = list()
+
+    # Calculate distances from Pacman to Ghosts and Food
+    for val in scaredGhosts:
+        distanceFromScaredGhosts.append(manhattanDistance(newPosPac, val.getPosition()))
+
+    for val in killerGhosts:
+        distanceFromScaredGhosts.append(manhattanDistance(newPosPac, val.getPosition()))
+        
+    for val in currentGameState.getFood().asList():
+        distanceFromFood.append(manhattanDistance(newPosPac, val))
+
+    # Update Evaluation Score
+    for val in distanceFromFood:
+        if val < 3:
+            evalScore += -1 * val              # Increase (1*val) points if pacman is very close to food
+        elif val < 7:
+            evalScore += -0.5 * val            # Increase (.5*val) points if pacman is close to food
+        else:
+            evalScore += -0.2 * val            # Increase (.2*val) points if pacman is far from food
+
+    for val in distanceFromKillerGhosts:
+        if val < 3:
+            evalScore += 3 * val               # Decrease (3*val) points if pacman is very close to Killer Ghost
+        elif val < 7:
+            evalScore += 2 * val               # Decrease (2*val) points if pacman is very close to Killer Ghost
+        else:
+            evalScore += 0.5 * val             # Decrease (.5*val) points if pacman is far to Killer Ghost
+
+    for val in distanceFromScaredGhosts:
+        if val < 3:
+            evalScore += -20 * val             # Increase (20*val) points if pacman is very close to Scared Ghost
+        else:
+            evalScore += -10 * val             # Increase (10*val) points if pacman is close to Scared Ghost
+
+    return evalScore
 
 # Abbreviation
 better = betterEvaluationFunction
